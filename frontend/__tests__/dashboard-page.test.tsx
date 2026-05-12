@@ -45,7 +45,7 @@ describe('DashboardPage', () => {
     })
     
     render(<DashboardPage />)
-    expect(screen.getByText(/Welcome back, John!/i)).toBeInTheDocument()
+    expect(screen.getByText(/Hello, John!/i)).toBeInTheDocument()
     expect(screen.getByText(/john@example.com/i)).toBeInTheDocument()
   })
 })

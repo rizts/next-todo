@@ -19,21 +19,24 @@ describe("apiRequest", () => {
         jest.clearAllMocks();
     });
 
-    it("should fetch JWT from /token endpoint and include it in Authorization header", async () => {
+    it("should fetch JWT from /api/auth/token endpoint and include it in Authorization header", async () => {
         const mockToken = "mock-jwt-token";
-        (authClient.jwt.getToken as jest.Mock).mockResolvedValue({
-            data: { token: mockToken }
-        });
-        (authClient.getSession as jest.Mock).mockResolvedValue({ data: null });
-
-        (global.fetch as jest.Mock).mockResolvedValue({
-            ok: true,
-            json: async () => ({ success: true })
-        });
+        
+        // Mock fetch for token
+        (global.fetch as jest.Mock)
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ token: mockToken })
+            })
+            // Mock fetch for actual API call
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({ success: true })
+            });
 
         const result = await apiRequest("/test-endpoint");
 
-        expect(authClient.jwt.getToken).toHaveBeenCalled();
+        expect(global.fetch).toHaveBeenCalledWith("/api/auth/token");
         expect(global.fetch).toHaveBeenCalledWith(
             expect.stringContaining("/test-endpoint"),
             expect.objectContaining({

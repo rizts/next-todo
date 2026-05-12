@@ -2,9 +2,6 @@
 
 A modern, high-performance Todo application featuring robust authentication with **Better Auth**, a secure **FastAPI** backend, and a beautiful **Next.js** frontend.
 
-> [!NOTE]
-> Penjelasan detil terkait project ini, termasuk arsitektur, fitur, dan panduan teknis mendalam, dapat ditemukan di file **[WALKTHROUGH.md](WALKTHROUGH.md)**.
-
 ## ✨ Features
 
 - **🔐 Secure Authentication**: Integrated with Google OAuth and Passkeys (WebAuthn) via [Better Auth](https://better-auth.com).

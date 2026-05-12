@@ -1,95 +1,71 @@
-# Todo App — Full-Stack Assignment
+# 🚀 Full-Stack Todo App (Next.js + FastAPI)
 
-A full-stack todo application built with **Next.js 14** (App Router) + **Better Auth** on the frontend and **FastAPI** (Python) on the backend.
+A modern, high-performance Todo application featuring robust authentication with **Better Auth**, a secure **FastAPI** backend, and a beautiful **Next.js** frontend.
 
-## Tech Stack
+## ✨ Features
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS |
-| Auth | Better Auth (Google OAuth + Passkey/WebAuthn) |
-| Backend | FastAPI (Python 3.11+) |
-| Database | SQLite + SQLAlchemy |
-| Email | Brevo (transactional) |
+- **🔐 Secure Authentication**: Integrated with Google OAuth and Passkeys (WebAuthn) via [Better Auth](https://better-auth.com).
+- **🛡️ JWT Handshake**: Custom JWT validation middleware in FastAPI using `PyJWT` and asymmetric `JWKS` key rotation.
+- **📧 Transactional Emails**: Welcome emails triggered via Brevo API on successful registration.
+- **⚡ Fast API**: Backend powered by FastAPI with SQLite and SQLAlchemy.
+- **🎨 Premium UI**: Responsive dashboard built with Tailwind CSS, Lucide icons, and Sonner toast notifications.
+- **🧪 Tested**: Comprehensive unit tests for both Frontend (Jest) and Backend (Pytest).
 
-## Architecture
+## 🏗️ Architecture
 
-```
-[Browser]
-   │
-   ├──► [Next.js Frontend :3000]
-   │         │
-   │         ├── Better Auth (/api/auth/*)
-   │         │     ├── Google OAuth 2.0
-   │         │     └── Passkey (WebAuthn)
-   │         │
-   │         └── Todo UI → REST API calls with JWT
-   │
-   └──► [FastAPI Backend :8000]
-             ├── JWT Middleware (validates Better Auth tokens)
-             └── /todos (GET, POST, PATCH, DELETE)
-                   └── SQLite DB (per-user isolation)
+```mermaid
+graph TD
+    Client[Next.js Frontend] <--> BA[Better Auth Engine]
+    BA <--> AuthDB[(auth.db)]
+    Client <--> API[FastAPI Backend]
+    API <--> TodoDB[(todo.db)]
+    BA -- JWT --> API
+    BA -- Webhook --> Brevo[Brevo Email API]
 ```
 
-## JWT Integration Decision
+### Key Technical Decisions
 
-Better Auth issues signed JWT tokens after authentication. The Python backend validates these tokens using the **same `BETTER_AUTH_SECRET`** shared between frontend and backend — this avoids needing a separate token exchange endpoint. The backend uses `python-jose` to verify the token signature, extract the user ID, and enforce per-user data isolation.
+1.  **JWKS (JSON Web Key Set)**: Unlike basic symmetric tokens (HS256), we use asymmetric signing. The frontend serves public keys at `/api/auth/jwks`, which the backend fetches and caches. This allows for seamless key rotation without manual configuration.
+2.  **PyJWT Migration**: We migrated from `python-jose` to `PyJWT` to support the `EdDSA` algorithm required by modern authentication standards.
+3.  **Better Auth**: Chosen over NextAuth for its superior developer experience, built-in Passkey support, and framework-agnostic core.
 
-## Setup
+## 🛠️ Setup Instructions
 
-### Prerequisites
-- Node.js 18+
-- Python 3.11+
-- Google Cloud Console project with OAuth credentials
+### 1. Backend (FastAPI)
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
-### 1. Frontend
-
+### 2. Frontend (Next.js)
 ```bash
 cd frontend
-cp .env.local.example .env.local
-# Fill in your credentials in .env.local
 npm install
 npm run dev
 ```
 
-### 2. Backend
+### 3. Environment Variables
+Create a `.env.local` in `frontend/` and `.env` in `backend/` based on the provided templates.
 
+## 🧪 Running Tests
+
+### Backend
 ```bash
 cd backend
-cp .env.example .env
-# Fill in your credentials in .env
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+./venv/bin/pytest
 ```
 
-## Environment Variables
+### Frontend
+```bash
+cd frontend
+npm test
+```
 
-### Frontend (`frontend/.env.local`)
-
-| Variable | Description |
-|----------|-------------|
-| `BETTER_AUTH_SECRET` | Secret for signing tokens (min 32 chars) |
-| `BETTER_AUTH_URL` | Frontend base URL (e.g. `http://localhost:3000`) |
-| `GOOGLE_CLIENT_ID` | From Google Cloud Console |
-| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
-| `DATABASE_URL` | SQLite path for Better Auth (e.g. `file:./auth.db`) |
-| `NEXT_PUBLIC_API_URL` | Backend API URL (e.g. `http://localhost:8000`) |
-| `BREVO_API_KEY` | Brevo API key for transactional email |
-| `BREVO_SENDER_EMAIL` | Verified sender email in Brevo |
-
-### Backend (`backend/.env`)
-
-| Variable | Description |
-|----------|-------------|
-| `BETTER_AUTH_SECRET` | Must match frontend secret (for JWT validation) |
-| `FRONTEND_URL` | Allowed CORS origin |
-| `DATABASE_URL` | SQLite path (e.g. `sqlite:///./todos.db`) |
-
-## Google OAuth Setup
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-2. Create a new OAuth 2.0 Client ID (Web application)
-3. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
-4. Copy Client ID and Secret to `.env.local`
+## 🐳 Docker Setup
+Run the entire stack with:
+```bash
+docker-compose up --build
+```

@@ -29,7 +29,7 @@ describe('DashboardPage', () => {
     })
     
     render(<DashboardPage />)
-    expect(screen.getByText(/Loading your dashboard/i)).toBeInTheDocument()
+    expect(screen.getByText(/Setting up your space/i)).toBeInTheDocument()
   })
 
   it('renders user info when session is loaded', () => {

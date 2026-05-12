@@ -10,6 +10,7 @@ const db = new Database(dbPath);
 
 export const auth = betterAuth({
     database: db,
+    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
     emailAndPassword: {
         enabled: false, // We only use Google and Passkey
     },
@@ -19,5 +20,13 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         },
     },
-    plugins: [passkey(), jwt()],
+    plugins: [
+        passkey(), 
+        jwt({
+            secret: process.env.BETTER_AUTH_SECRET,
+            jwks: {
+                disabled: true // Mematikan JWKS agar menggunakan HS256 (Symmetric)
+            }
+        })
+    ],
 });

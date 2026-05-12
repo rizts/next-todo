@@ -1,29 +1,65 @@
-from fastapi import Request, HTTPException, Depends
-from jose import jwt, JWTError
+import httpx
+import jwt
+from fastapi import Request, HTTPException
 from config import settings
 
-def get_current_user(request: Request):
-    """
-    Dependency to validate JWT from Better Auth.
-    Expects 'Authorization: Bearer <token>' header.
-    """
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Missing or invalid authorization header",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+# Cache untuk JWKS agar tidak fetch setiap request
+_jwks_cache = None
 
-    token = auth_header.split(" ")[1]
+async def get_jwks():
+    global _jwks_cache
+    if _jwks_cache:
+        return _jwks_cache
     
     try:
-        # Better Auth uses HS256 by default with the secret
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{settings.FRONTEND_URL}/api/auth/jwks")
+            _jwks_cache = response.json()
+            return _jwks_cache
+    except Exception as e:
+        print(f"Failed to fetch JWKS: {e}")
+        return None
+
+async def get_current_user(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+
+    token = auth_header.split(" ")[1]
+    jwks_data = await get_jwks()
+    
+    if not jwks_data:
+        raise HTTPException(status_code=500, detail="Internal Server Error: Could not verify token (JWKS missing)")
+
+    try:
+        # Ambil header untuk mencari key yang tepat
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
+        
+        # PyJWT handles JWKS via PyJWKSet
+        jwks = jwt.PyJWKSet.from_dict(jwks_data)
+        
+        try:
+            # Cari key yang sesuai secara manual di list jwks.keys
+            signing_key = next((k for k in jwks.keys if k.key_id == kid), None)
+            if not signing_key:
+                raise Exception(f"Key {kid} not found")
+        except Exception:
+            # Jika tidak ketemu, coba refresh JWKS sekali lagi
+            global _jwks_cache
+            _jwks_cache = None 
+            jwks_data = await get_jwks()
+            jwks = jwt.PyJWKSet.from_dict(jwks_data)
+            signing_key = next((k for k in jwks.keys if k.key_id == kid), None)
+            if not signing_key:
+                raise HTTPException(status_code=401, detail=f"Invalid token: Key {kid} not found in JWKS")
+
+        # Verifikasi menggunakan Public Key
         payload = jwt.decode(
-            token, 
-            settings.BETTER_AUTH_SECRET, 
-            algorithms=["HS256"],
-            options={"verify_aud": False} # Better Auth might not set 'aud' by default
+            token,
+            signing_key.key,
+            algorithms=["EdDSA", "RS256", "HS256"],
+            options={"verify_aud": False}
         )
         
         user_id: str = payload.get("sub")
@@ -32,9 +68,5 @@ def get_current_user(request: Request):
             
         return user_id
         
-    except JWTError as e:
-        raise HTTPException(
-            status_code=401,
-            detail=f"Token validation failed: {str(e)}",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    except jwt.PyJWTError as e:
+        raise HTTPException(status_code=401, detail=f"Token validation failed: {str(e)}")

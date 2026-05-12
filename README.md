@@ -6,7 +6,7 @@ A modern, high-performance Todo application featuring robust authentication with
 
 - **🔐 Secure Authentication**: Integrated with Google OAuth and Passkeys (WebAuthn) via [Better Auth](https://better-auth.com).
 - **🛡️ JWT Handshake**: Custom JWT validation middleware in FastAPI using `PyJWT` and asymmetric `JWKS` key rotation.
-- **📧 Transactional Emails**: Welcome emails triggered via Brevo API on successful registration.
+- **📧 Transactional Emails**: Welcome emails triggered via Brevo API on successful registration (Sender Domain: `mailin.fr` / `yourtodoapp.com`).
 - **⚡ Fast API**: Backend powered by FastAPI with SQLite and SQLAlchemy.
 - **🎨 Premium UI**: Responsive dashboard built with Tailwind CSS, Lucide icons, and Sonner toast notifications.
 - **🧪 Tested**: Comprehensive unit tests for both Frontend (Jest) and Backend (Pytest).

@@ -1,5 +1,5 @@
 import pytest
-from jose import jwt
+import jwt
 from config import settings
 
 def test_auth_valid_token(client, auth_headers):
@@ -21,7 +21,8 @@ def test_auth_invalid_token(client):
 def test_auth_wrong_secret(client):
     # Token signed with a different secret
     payload = {"sub": "user123"}
-    token = jwt.encode(payload, "wrong_secret_key", algorithm="HS256")
+    # Note: Backend will fail because KID won't match or signature won't match
+    token = jwt.encode(payload, "wrong_secret_key", algorithm="HS256", headers={"kid": "some_kid"})
     headers = {"Authorization": f"Bearer {token}"}
     response = client.get("/todos/", headers=headers)
     assert response.status_code == 401

@@ -1,4 +1,5 @@
 import pytest
+import jwt
 
 def test_create_todo(client, auth_headers):
     response = client.post(
@@ -18,9 +19,14 @@ def test_list_todos_isolation(client, auth_headers):
     
     # Create another user's token
     payload = {"sub": "other_user_456"}
-    from jose import jwt
-    from config import settings
-    other_token = jwt.encode(payload, settings.BETTER_AUTH_SECRET, algorithm="HS256")
+    import jwt
+    from tests.conftest import TEST_SECRET, TEST_KID
+    other_token = jwt.encode(
+        payload, 
+        TEST_SECRET, 
+        algorithm="HS256", 
+        headers={"kid": TEST_KID}
+    )
     other_headers = {"Authorization": f"Bearer {other_token}"}
     
     # Other user should see 0 todos
@@ -43,9 +49,13 @@ def test_update_todo_ownership(client, auth_headers):
     
     # Try update with other user (403 Forbidden)
     payload = {"sub": "hacker_user"}
-    from jose import jwt
-    from config import settings
-    other_token = jwt.encode(payload, settings.BETTER_AUTH_SECRET, algorithm="HS256")
+    from tests.conftest import TEST_SECRET, TEST_KID
+    other_token = jwt.encode(
+        payload, 
+        TEST_SECRET, 
+        algorithm="HS256", 
+        headers={"kid": TEST_KID}
+    )
     other_headers = {"Authorization": f"Bearer {other_token}"}
     
     resp = client.patch(f"/todos/{todo_id}", json={"completed": False}, headers=other_headers)

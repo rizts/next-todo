@@ -8,6 +8,8 @@ import path from "path";
 const dbPath = process.env.DATABASE_URL?.replace("file:", "") || path.join(process.cwd(), "auth.db");
 const db = new Database(dbPath);
 
+import { sendWelcomeEmail } from "./email";
+
 export const auth = betterAuth({
     database: db,
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -20,13 +22,20 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         },
     },
+    databaseHooks: {
+        user: {
+            create: {
+                after: async (user) => {
+                    console.log("New user created, sending welcome email to:", user.email);
+                    await sendWelcomeEmail(user.email, user.name || "User");
+                }
+            }
+        }
+    },
     plugins: [
         passkey(), 
         jwt({
             secret: process.env.BETTER_AUTH_SECRET,
-            jwks: {
-                disabled: true // Mematikan JWKS agar menggunakan HS256 (Symmetric)
-            }
         })
     ],
 });

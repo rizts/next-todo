@@ -3,11 +3,11 @@ import { authClient } from "./auth-client";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-    // 1. Ambil JWT menggunakan endpoint /token (standard Better Auth JWT plugin)
-    const { data: tokenData } = await authClient.jwt.getToken().catch(() => ({ data: null }));
-    let token = tokenData?.token;
+    // 1. Ambil JWT menggunakan endpoint /token (yang sudah terverifikasi di Better Auth kita)
+    const tokenRes = await fetch("/api/auth/token").then(res => res.json()).catch(() => null);
+    let token = tokenRes?.token;
 
-    // 2. Fallback: Cek di session data (beberapa versi menyimpan di sini)
+    // 2. Fallback: Cek di session data
     if (!token) {
         const { data: sessionData } = await authClient.getSession().catch(() => ({ data: null }));
         token = (sessionData as any)?.session?.jwt || (sessionData as any)?.jwt;

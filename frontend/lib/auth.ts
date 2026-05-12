@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { passkey } from "@better-auth/passkey";
+import { jwt } from "better-auth/plugins";
 import Database from "better-sqlite3";
 import path from "path";
 
@@ -18,5 +19,5 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         },
     },
-    plugins: [passkey()],
+    plugins: [passkey(), jwt()],
 });

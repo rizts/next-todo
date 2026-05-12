@@ -48,7 +48,27 @@ npm run dev
 ```
 
 ### 3. Environment Variables
-Create a `.env.local` in `frontend/` and `.env` in `backend/` based on the provided templates.
+
+Create a `.env.local` in `frontend/`:
+```env
+# Better Auth
+BETTER_AUTH_SECRET=your_secret_here
+BETTER_AUTH_URL=http://localhost:3000
+
+# OAuth
+GOOGLE_CLIENT_ID=your_google_id
+GOOGLE_CLIENT_SECRET=your_google_secret
+
+# Email (Brevo)
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_EMAIL=your_verified_sender_email
+```
+
+Create a `.env` in `backend/` (optional, defaults are provided):
+```env
+JWKS_URL=http://localhost:3000/api/auth/jwks
+DATABASE_URL=sqlite:///./todo.db
+```
 
 ## 🧪 Running Tests
 

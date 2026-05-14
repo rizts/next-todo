@@ -15,6 +15,52 @@ let db;
 try {
     db = new Database(dbPath);
     console.log("Database initialized successfully at:", dbPath);
+    
+    // Create tables manually if they don't exist (needed for Vercel /tmp setup)
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS user (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            emailVerified BOOLEAN NOT NULL,
+            image TEXT,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS session (
+            id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL REFERENCES user(id),
+            token TEXT NOT NULL UNIQUE,
+            expiresAt DATETIME NOT NULL,
+            ipAddress TEXT,
+            userAgent TEXT,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS account (
+            id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL REFERENCES user(id),
+            accountId TEXT NOT NULL,
+            providerId TEXT NOT NULL,
+            accessToken TEXT,
+            refreshToken TEXT,
+            accessTokenExpiresAt DATETIME,
+            refreshTokenExpiresAt DATETIME,
+            scope TEXT,
+            password TEXT,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS verification (
+            id TEXT PRIMARY KEY,
+            identifier TEXT NOT NULL,
+            value TEXT NOT NULL,
+            expiresAt DATETIME NOT NULL,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        );
+    `);
+    console.log("Database tables verified/created successfully.");
 } catch (e) {
     console.error("Failed to initialize database:", e);
     // Fallback or rethrow to see in logs

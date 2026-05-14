@@ -74,9 +74,14 @@ try {
 
 // Masked logging for debugging environment variables
 const rawBaseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
-const normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL.slice(0, -1) : rawBaseURL;
+let normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL.slice(0, -1) : rawBaseURL;
 
-console.log("BETTER_AUTH_URL (Normalized):", normalizedBaseURL);
+// Force HTTPS for Vercel production
+if (process.env.VERCEL === "1" && normalizedBaseURL.startsWith("http://")) {
+    normalizedBaseURL = normalizedBaseURL.replace("http://", "https://");
+}
+
+console.log("BETTER_AUTH_URL (Final):", normalizedBaseURL);
 console.log("BETTER_AUTH_SECRET present:", !!process.env.BETTER_AUTH_SECRET);
 console.log("GOOGLE_CLIENT_ID length:", process.env.GOOGLE_CLIENT_ID?.length || 0);
 console.log("GOOGLE_CLIENT_SECRET present:", !!process.env.GOOGLE_CLIENT_SECRET);

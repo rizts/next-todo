@@ -29,10 +29,7 @@ const client = createClient({
 });
 
 export const auth = betterAuth({
-    database: {
-        provider: "libsql",
-        db: client,
-    },
+    database: client,
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,
     logger: {

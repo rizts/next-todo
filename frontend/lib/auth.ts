@@ -30,6 +30,70 @@ const client = createClient({
     url: dbUrl,
 });
 
+// Initialize tables if they don't exist (Top-level await is supported in Node 20+)
+try {
+    await client.batch([
+        `CREATE TABLE IF NOT EXISTS user (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            emailVerified BOOLEAN NOT NULL,
+            image TEXT,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS session (
+            id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL REFERENCES user(id),
+            token TEXT NOT NULL UNIQUE,
+            expiresAt DATETIME NOT NULL,
+            ipAddress TEXT,
+            userAgent TEXT,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS account (
+            id TEXT PRIMARY KEY,
+            userId TEXT NOT NULL REFERENCES user(id),
+            accountId TEXT NOT NULL,
+            providerId TEXT NOT NULL,
+            accessToken TEXT,
+            refreshToken TEXT,
+            idToken TEXT,
+            session_state TEXT,
+            accessTokenExpiresAt DATETIME,
+            refreshTokenExpiresAt DATETIME,
+            scope TEXT,
+            password TEXT,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS verification (
+            id TEXT PRIMARY KEY,
+            identifier TEXT NOT NULL,
+            value TEXT NOT NULL,
+            expiresAt DATETIME NOT NULL,
+            createdAt DATETIME NOT NULL,
+            updatedAt DATETIME NOT NULL
+        )`,
+        `CREATE TABLE IF NOT EXISTS passkey (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            publicKey TEXT NOT NULL,
+            userId TEXT NOT NULL REFERENCES user(id),
+            credentialID TEXT NOT NULL,
+            counter INTEGER NOT NULL,
+            deviceType TEXT NOT NULL,
+            backedUp BOOLEAN NOT NULL,
+            transports TEXT,
+            createdAt DATETIME
+        )`
+    ], "write");
+    console.log("Database tables verified/created successfully.");
+} catch (e) {
+    console.error("Database initialization warning (might be expected during build):", e);
+}
+
 // Explicitly create a Kysely instance to avoid auto-detection issues on Vercel
 const db = new Kysely<any>({
     dialect: new LibsqlDialect({

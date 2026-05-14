@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { passkey } from "@better-auth/passkey";
 import { jwt } from "better-auth/plugins";
+import { createClient } from "@libsql/client";
 
 const getBaseURL = () => {
     if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
@@ -23,12 +24,14 @@ const dbUrl = isVercel
     ? "file:/tmp/auth.db"
     : (process.env.DATABASE_URL || "file:auth.db");
 
+const client = createClient({
+    url: dbUrl,
+});
+
 export const auth = betterAuth({
     database: {
         provider: "libsql",
-        connection: {
-            url: dbUrl,
-        },
+        db: client,
     },
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,

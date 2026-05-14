@@ -78,7 +78,8 @@ const normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL.slice(0, -1) : r
 
 console.log("BETTER_AUTH_URL (Normalized):", normalizedBaseURL);
 console.log("BETTER_AUTH_SECRET present:", !!process.env.BETTER_AUTH_SECRET);
-console.log("GOOGLE_CLIENT_ID present:", !!process.env.GOOGLE_CLIENT_ID);
+console.log("GOOGLE_CLIENT_ID length:", process.env.GOOGLE_CLIENT_ID?.length || 0);
+console.log("GOOGLE_CLIENT_SECRET present:", !!process.env.GOOGLE_CLIENT_SECRET);
 
 import { sendWelcomeEmail } from "./email";
 

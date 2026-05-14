@@ -5,9 +5,9 @@ from routers import todos
 
 app = FastAPI(title="Todo API", description="API for Full-Stack Todo App")
 
-# Robust parsing of FRONTEND_URL to handle multiple origins and accidental quotes
+# Robust parsing of FRONTEND_URL to handle multiple origins, quotes, and trailing slashes
 raw_origins = settings.FRONTEND_URL.split(",")
-origins = [o.strip().replace('"', '').replace("'", "") for o in raw_origins if o.strip()]
+origins = [o.strip().replace('"', '').replace("'", "").rstrip("/") for o in raw_origins if o.strip()]
 
 print(f"DEBUG: Better Auth - Allowed CORS Origins: {origins}")
 

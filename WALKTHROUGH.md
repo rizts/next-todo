@@ -50,17 +50,17 @@ I integrated unit testing at every stage to ensure the "handshake" between Next.
 
 Developing this project wasn't just about writing code; it was about solving a series of "headaches" that forced me to rethink my architecture several times. Here is the full story of the hurdles I faced:
 
-### 1. The JWT Algorithm Conflict (The EdDSA vs HS256 Drama)
-Initially, I planned to use a simple symmetric signing method (HS256) where both the frontend and backend share a secret key. However, I quickly realized that **Better Auth** defaults to **EdDSA (asymmetric signing)** for better security.
+### 1. The JWT Algorithm & Architectural Alignment (EdDSA Integration)
+Initially, I considered using a symmetric signing method (HS256) where both the frontend and backend share a secret. However, **Better Auth** utilizes **EdDSA (Edwards-curve Digital Signature Algorithm)**, specifically using the **Ed25519** curve. 
 
-*   **The Conflict**: I tried to use `python-jose`, which is the standard library for FastAPI auth. But `python-jose` is quite old and doesn't support the modern EdDSA public keys provided by Better Auth's JWKS endpoint.
-*   **The Solution**: I had to ditch my initial backend auth logic and switch to **`PyJWT`**. I built a dynamic JWKS fetcher that pulls the public key directly from the frontend's `/api/auth/jwks` endpoint. This "handshake" allows the backend to verify users securely without ever needing a shared secret. It was more work, but it made the app much more "production-ready."
+*   **Technical Rationale**: Unlike RSA or HS256, EdDSA offers high security with significantly smaller key sizes and faster signing/verification performance. It is also designed to be resistant to side-channel attacks and doesn't require a high-quality random number generator for every signature, making it a more robust choice for modern distributed systems.
+*   **The Conflict**: I initially implemented `python-jose`, a common library for FastAPI. However, `python-jose` lacks native, stable support for the Ed25519 curve used in modern JWKS endpoints.
+*   **The Solution**: I pivoted to **`PyJWT`** with the `cryptography` backend. I implemented a dynamic JWKS (JSON Web Key Set) resolver that fetches the public key from the frontend's `/api/auth/jwks` endpoint. This ensures that the frontend and backend are **decoupled**; the backend only needs the public key to verify authenticity, and the auth provider can rotate keys without any manual configuration changes on the API side.
 
-### 2. The Brevo SDK & Next.js 15 Compatibility
-I tried to follow the "official" way of sending emails by installing the `@getbrevo/brevo` SDK. This turned out to be a major mistake in a **Next.js 15 (Turbopack)** environment.
-
-*   **The Error**: Every time I tried to run the app, I got a cryptic error: `Export 'SendSmtpEmail' doesn't exist in target module`. This happened because the Brevo SDK uses an older module format that clashes with the strict ESM (ES Modules) requirements of Next.js 15 and Turbopack.
-*   **The Fix**: Instead of spending hours trying to patch a third-party library, I decided to bypass the SDK entirely. I wrote a simple wrapper using the **standard Fetch API** to call Brevo's REST endpoint. This removed a heavy dependency from my project and fixed all the build errors instantly.
+### 2. Brevo Integration & Environment Compatibility
+The project requires **Brevo** for transactional emails. I encountered a build-time compatibility issue when integrating the official `@getbrevo/brevo` SDK.
+*   **The Issue**: The SDK resulted in an `Export 'SendSmtpEmail' doesn't exist` error when running with **Next.js 15 (Turbopack)**. This stems from a conflict between the SDK's module resolution format and the strict ESM standards enforced by modern Next.js environments.
+*   **The Solution**: To ensure stability and reduce dependency overhead, I implemented a direct integration using the **standard Fetch API** to interact with Brevo's REST endpoint. This approach is more lightweight and future-proof, as it avoids reliance on third-party wrapper libraries that may not yet support the latest Next.js build optimizations.
 
 ### 3. Solving the Token Retrieval Issue
 Early on, the backend kept returning `401 Unauthorized` because it couldn't find the token in the headers correctly.

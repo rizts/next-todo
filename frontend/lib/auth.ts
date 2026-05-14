@@ -28,8 +28,13 @@ const client = createClient({
     url: dbUrl,
 });
 
+console.log("LibSQL Client initialized. Has execute:", typeof client.execute === "function");
+
 export const auth = betterAuth({
-    database: client,
+    database: {
+        provider: "sqlite",
+        db: client,
+    },
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,
     logger: {

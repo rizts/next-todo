@@ -21,10 +21,7 @@ console.log("Better Auth - Environment:", process.env.VERCEL === "1" ? "Vercel" 
 console.log("Better Auth - Base URL:", normalizedBaseURL);
 
 // Use LibSQL for better Vercel compatibility
-const isVercel = process.env.VERCEL === "1";
-const dbUrl = isVercel 
-    ? "file:/tmp/auth.db"
-    : (process.env.DATABASE_URL || "file:auth.db");
+const dbUrl = process.env.DATABASE_URL || (isVercel ? "file:/tmp/auth.db" : "file:auth.db");
 
 const client = createClient({
     url: dbUrl,

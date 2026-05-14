@@ -12,6 +12,7 @@ import { sendWelcomeEmail } from "./email";
 
 export const auth = betterAuth({
     database: db,
+    secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
     emailAndPassword: {
         enabled: false, // We only use Google and Passkey
@@ -34,8 +35,6 @@ export const auth = betterAuth({
     },
     plugins: [
         passkey(), 
-        jwt({
-            secret: process.env.BETTER_AUTH_SECRET,
-        })
+        jwt()
     ],
 });

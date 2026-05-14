@@ -88,28 +88,13 @@ export const auth = betterAuth({
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,
     emailAndPassword: {
-        enabled: false, // We only use Google and Passkey
+        enabled: false,
     },
     socialProviders: {
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
         },
-    },
-    databaseHooks: {
-        user: {
-            create: {
-                after: async (user) => {
-                    console.log("Hook: New user created in DB:", user.email);
-                    try {
-                        await sendWelcomeEmail(user.email, user.name || "User");
-                        console.log("Welcome email sent successfully.");
-                    } catch (emailError) {
-                        console.error("Failed to send welcome email, but user creation will continue:", emailError);
-                    }
-                }
-            }
-        }
     },
     plugins: [
         passkey(), 

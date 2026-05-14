@@ -2,6 +2,9 @@ import { betterAuth } from "better-auth";
 import { passkey } from "@better-auth/passkey";
 import { jwt } from "better-auth/plugins";
 import { createClient } from "@libsql/client";
+import { Kysely } from "kysely";
+import { LibsqlDialect } from "kysely-libsql";
+import { kyselyAdapter } from "@better-auth/kysely-adapter";
 
 const getBaseURL = () => {
     if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
@@ -18,7 +21,6 @@ console.log("Better Auth - Environment:", process.env.VERCEL === "1" ? "Vercel" 
 console.log("Better Auth - Base URL:", normalizedBaseURL);
 
 // Use LibSQL for better Vercel compatibility
-// It works exactly like SQLite but doesn't have native binding issues
 const isVercel = process.env.VERCEL === "1";
 const dbUrl = isVercel 
     ? "file:/tmp/auth.db"
@@ -28,13 +30,17 @@ const client = createClient({
     url: dbUrl,
 });
 
-console.log("LibSQL Client initialized. Has execute:", typeof client.execute === "function");
+// Explicitly create a Kysely instance to avoid auto-detection issues on Vercel
+const db = new Kysely<any>({
+    dialect: new LibsqlDialect({
+        client: client,
+    }),
+});
 
 export const auth = betterAuth({
-    database: {
-        provider: "sqlite",
-        db: client,
-    },
+    database: kyselyAdapter(db, {
+        type: "sqlite",
+    }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,
     logger: {

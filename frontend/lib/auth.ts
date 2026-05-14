@@ -67,12 +67,19 @@ try {
     throw e;
 }
 
-const rawBaseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000";
-let normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL.slice(0, -1) : rawBaseURL;
+const getBaseURL = () => {
+    if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+    if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) return process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
+    // Vercel deployment URL (always https)
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    return "http://localhost:3000";
+};
 
-if (process.env.VERCEL === "1" && normalizedBaseURL.startsWith("http://")) {
-    normalizedBaseURL = normalizedBaseURL.replace("http://", "https://");
-}
+const rawBaseURL = getBaseURL();
+const normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL.slice(0, -1) : rawBaseURL;
+
+console.log("Better Auth - Environment:", process.env.VERCEL === "1" ? "Vercel" : "Local/Other");
+console.log("Better Auth - Base URL:", normalizedBaseURL);
 
 export const auth = betterAuth({
     database: {
@@ -84,8 +91,8 @@ export const auth = betterAuth({
     logger: {
         level: "debug",
     },
-    advanced: {
-        trustHost: true,
+    pages: {
+        signIn: "/login",
     },
     emailAndPassword: {
         enabled: false,

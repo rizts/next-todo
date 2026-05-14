@@ -91,8 +91,13 @@ export const auth = betterAuth({
         user: {
             create: {
                 after: async (user) => {
-                    console.log("New user created, sending welcome email to:", user.email);
-                    await sendWelcomeEmail(user.email, user.name || "User");
+                    console.log("Hook: New user created in DB:", user.email);
+                    try {
+                        await sendWelcomeEmail(user.email, user.name || "User");
+                        console.log("Welcome email sent successfully.");
+                    } catch (emailError) {
+                        console.error("Failed to send welcome email, but user creation will continue:", emailError);
+                    }
                 }
             }
         }

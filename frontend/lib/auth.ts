@@ -21,10 +21,12 @@ console.log("Better Auth - Environment:", process.env.VERCEL === "1" ? "Vercel" 
 console.log("Better Auth - Base URL:", normalizedBaseURL);
 
 // Use LibSQL for better Vercel compatibility
+const isVercel = process.env.VERCEL === "1";
 const dbUrl = process.env.DATABASE_URL || (isVercel ? "file:/tmp/auth.db" : "file:auth.db");
 
 const client = createClient({
     url: dbUrl,
+    authToken: process.env.LIBSQL_AUTH_TOKEN,
 });
 
 // Initialize tables if they don't exist (Top-level await is supported in Node 20+)

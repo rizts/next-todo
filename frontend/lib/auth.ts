@@ -44,6 +44,7 @@ try {
             providerId TEXT NOT NULL,
             accessToken TEXT,
             refreshToken TEXT,
+            idToken TEXT,
             accessTokenExpiresAt DATETIME,
             refreshTokenExpiresAt DATETIME,
             scope TEXT,
@@ -60,6 +61,10 @@ try {
             updatedAt DATETIME NOT NULL
         );
     `);
+    
+    // Fallback: Add idToken if table existed without it
+    try { db.exec("ALTER TABLE account ADD COLUMN idToken TEXT;"); } catch (e) {}
+    
     console.log("Database tables verified/created successfully.");
 } catch (e) {
     console.error("Failed to initialize database:", e);

@@ -45,6 +45,7 @@ try {
             accessToken TEXT,
             refreshToken TEXT,
             idToken TEXT,
+            session_state TEXT,
             accessTokenExpiresAt DATETIME,
             refreshTokenExpiresAt DATETIME,
             scope TEXT,
@@ -62,13 +63,9 @@ try {
         );
     `);
     
-    // Fallback: Add idToken if table existed without it
-    try { db.exec("ALTER TABLE account ADD COLUMN idToken TEXT;"); } catch (e) {}
-    
     console.log("Database tables verified/created successfully.");
 } catch (e) {
     console.error("Failed to initialize database:", e);
-    // Fallback or rethrow to see in logs
     throw e;
 }
 
@@ -92,6 +89,12 @@ export const auth = betterAuth({
     database: db,
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,
+    logger: {
+        level: "debug",
+    },
+    advanced: {
+        trustHost: true,
+    },
     emailAndPassword: {
         enabled: false,
     },
@@ -99,6 +102,7 @@ export const auth = betterAuth({
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+            redirectURI: normalizedBaseURL + "/api/auth/callback/google",
         },
     },
     plugins: [

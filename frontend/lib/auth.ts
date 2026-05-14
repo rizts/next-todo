@@ -21,12 +21,17 @@ try {
     throw e;
 }
 
+// Masked logging for debugging environment variables
+console.log("BETTER_AUTH_URL:", process.env.BETTER_AUTH_URL);
+console.log("BETTER_AUTH_SECRET present:", !!process.env.BETTER_AUTH_SECRET);
+console.log("GOOGLE_CLIENT_ID present:", !!process.env.GOOGLE_CLIENT_ID);
+
 import { sendWelcomeEmail } from "./email";
 
 export const auth = betterAuth({
     database: db,
     secret: process.env.BETTER_AUTH_SECRET,
-    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
     emailAndPassword: {
         enabled: false, // We only use Google and Passkey
     },

@@ -1,73 +1,6 @@
 import { betterAuth } from "better-auth";
 import { passkey } from "@better-auth/passkey";
 import { jwt } from "better-auth/plugins";
-import Database from "better-sqlite3";
-import path from "path";
-import { sendWelcomeEmail } from "./email";
-
-// Initialize SQLite database for Better Auth
-const isVercel = process.env.VERCEL === "1";
-const dbPath = isVercel 
-    ? path.join("/tmp", "auth.db")
-    : (process.env.DATABASE_URL?.replace("file:", "") || path.join(process.cwd(), "auth.db"));
-
-let db: any;
-try {
-    db = new Database(dbPath);
-    console.log("Database initialized successfully at:", dbPath);
-    console.log("Database object type:", typeof db);
-    console.log("Database methods:", Object.keys(db).filter(k => typeof (db as any)[k] === "function"));
-    
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS user (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE,
-            emailVerified BOOLEAN NOT NULL,
-            image TEXT,
-            createdAt DATETIME NOT NULL,
-            updatedAt DATETIME NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS session (
-            id TEXT PRIMARY KEY,
-            userId TEXT NOT NULL REFERENCES user(id),
-            token TEXT NOT NULL UNIQUE,
-            expiresAt DATETIME NOT NULL,
-            ipAddress TEXT,
-            userAgent TEXT,
-            createdAt DATETIME NOT NULL,
-            updatedAt DATETIME NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS account (
-            id TEXT PRIMARY KEY,
-            userId TEXT NOT NULL REFERENCES user(id),
-            accountId TEXT NOT NULL,
-            providerId TEXT NOT NULL,
-            accessToken TEXT,
-            refreshToken TEXT,
-            idToken TEXT,
-            session_state TEXT,
-            accessTokenExpiresAt DATETIME,
-            refreshTokenExpiresAt DATETIME,
-            scope TEXT,
-            password TEXT,
-            createdAt DATETIME NOT NULL,
-            updatedAt DATETIME NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS verification (
-            id TEXT PRIMARY KEY,
-            identifier TEXT NOT NULL,
-            value TEXT NOT NULL,
-            expiresAt DATETIME NOT NULL,
-            createdAt DATETIME NOT NULL,
-            updatedAt DATETIME NOT NULL
-        );
-    `);
-    console.log("Database tables verified/created successfully.");
-} catch (e) {
-    console.error("Failed to initialize database:", e);
-    throw e;
-}
 
 const getBaseURL = () => {
     if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
@@ -83,10 +16,19 @@ const normalizedBaseURL = rawBaseURL.endsWith("/") ? rawBaseURL.slice(0, -1) : r
 console.log("Better Auth - Environment:", process.env.VERCEL === "1" ? "Vercel" : "Local/Other");
 console.log("Better Auth - Base URL:", normalizedBaseURL);
 
+// Use LibSQL for better Vercel compatibility
+// It works exactly like SQLite but doesn't have native binding issues
+const isVercel = process.env.VERCEL === "1";
+const dbUrl = isVercel 
+    ? "file:/tmp/auth.db"
+    : (process.env.DATABASE_URL || "file:auth.db");
+
 export const auth = betterAuth({
     database: {
-        provider: "sqlite",
-        db: db,
+        provider: "libsql",
+        connection: {
+            url: dbUrl,
+        },
     },
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: normalizedBaseURL,

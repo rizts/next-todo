@@ -87,6 +87,12 @@ try {
             backedUp BOOLEAN NOT NULL,
             transports TEXT,
             createdAt DATETIME
+        )`,
+        `CREATE TABLE IF NOT EXISTS jwks (
+            id TEXT PRIMARY KEY,
+            publicKey TEXT NOT NULL,
+            privateKey TEXT NOT NULL,
+            createdAt DATETIME NOT NULL
         )`
     ], "write");
     console.log("Database tables verified/created successfully.");

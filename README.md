@@ -9,8 +9,9 @@ A modern, high-performance Todo application featuring robust authentication with
 
 - **🔐 Secure Authentication**: Integrated with Google OAuth and Passkeys (WebAuthn) via [Better Auth](https://better-auth.com).
 - **🛡️ JWT Handshake**: Custom JWT validation middleware in FastAPI using `PyJWT` and asymmetric `JWKS` key rotation.
-- **📧 Transactional Emails**: Welcome emails triggered via Brevo API on successful registration (Sender Domain: `mailin.fr` / `yourtodoapp.com`).
-- **⚡ Fast API**: Backend powered by FastAPI with SQLite and SQLAlchemy.
+- **📧 Transactional Emails**: Welcome emails triggered via Brevo API on successful registration.
+- **⚡ Fast API**: Backend powered by FastAPI with SQLAlchemy.
+- **🗄️ Database Flexibility**: Support for local **SQLite** (development) and **LibSQL/Turso** (production-grade persistence).
 - **🎨 Premium UI**: Responsive dashboard built with Tailwind CSS, Lucide icons, and Sonner toast notifications.
 - **🧪 Tested**: Comprehensive unit tests for both Frontend (Jest) and Backend (Pytest).
 
@@ -19,18 +20,18 @@ A modern, high-performance Todo application featuring robust authentication with
 ```mermaid
 graph TD
     Client[Next.js Frontend] <--> BA[Better Auth Engine]
-    BA <--> AuthDB[(auth.db)]
+    BA <--> AuthDB[(LibSQL/SQLite)]
     Client <--> API[FastAPI Backend]
-    API <--> TodoDB[(todo.db)]
+    API <--> TodoDB[(SQLite)]
     BA -- JWT --> API
     BA -- Webhook --> Brevo[Brevo Email API]
 ```
 
 ### Key Technical Decisions
 
-1.  **JWKS (JSON Web Key Set)**: Unlike basic symmetric tokens (HS256), we use asymmetric signing. The frontend serves public keys at `/api/auth/jwks`, which the backend fetches and caches. This allows for seamless key rotation without manual configuration.
-2.  **PyJWT Migration**: We migrated from `python-jose` to `PyJWT` to support the `EdDSA` algorithm required by modern authentication standards.
-3.  **Better Auth**: Chosen over NextAuth for its superior developer experience, built-in Passkey support, and framework-agnostic core.
+1.  **JWKS (JSON Web Key Set)**: Unlike basic symmetric tokens (HS256), we use asymmetric signing. The frontend serves public keys at `/api/auth/jwks`, which the backend fetches dynamically.
+2.  **Serverless Resilience**: To handle the ephemeral nature of serverless platforms (like Vercel), we utilize **LibSQL (Turso)** for authentication data, ensuring sessions are persistent and globally available.
+3.  **Robust Config**: The backend includes a global configuration validator to automatically sanitize environment variables (like stripping trailing slashes), ensuring stable connections across different cloud platforms.
 
 ## 🛠️ Setup Instructions
 
@@ -58,6 +59,10 @@ Create a `.env.local` in `frontend/`:
 BETTER_AUTH_SECRET=your_secret_here
 BETTER_AUTH_URL=http://localhost:3000
 
+# Database (Production: LibSQL/Turso)
+DATABASE_URL=libsql://your-db-url
+LIBSQL_AUTH_TOKEN=your-auth-token
+
 # OAuth
 GOOGLE_CLIENT_ID=your_google_id
 GOOGLE_CLIENT_SECRET=your_google_secret
@@ -67,9 +72,9 @@ BREVO_API_KEY=your_brevo_api_key
 BREVO_SENDER_EMAIL=your_verified_sender_email
 ```
 
-Create a `.env` in `backend/` (optional, defaults are provided):
+Create a `.env` in `backend/`:
 ```env
-JWKS_URL=http://localhost:3000/api/auth/jwks
+FRONTEND_URL=http://localhost:3000
 DATABASE_URL=sqlite:///./todo.db
 ```
 
@@ -78,7 +83,7 @@ DATABASE_URL=sqlite:///./todo.db
 ### Backend
 ```bash
 cd backend
-./venv/bin/pytest
+pytest
 ```
 
 ### Frontend

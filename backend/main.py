@@ -2,6 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from routers import todos
+import models
+from database import engine
+
+# Create tables on startup
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Todo API", description="API for Full-Stack Todo App")
 

@@ -11,7 +11,15 @@ const dbPath = isVercel
     ? path.join("/tmp", "auth.db")
     : (process.env.DATABASE_URL?.replace("file:", "") || path.join(process.cwd(), "auth.db"));
 
-const db = new Database(dbPath);
+let db;
+try {
+    db = new Database(dbPath);
+    console.log("Database initialized successfully at:", dbPath);
+} catch (e) {
+    console.error("Failed to initialize database:", e);
+    // Fallback or rethrow to see in logs
+    throw e;
+}
 
 import { sendWelcomeEmail } from "./email";
 

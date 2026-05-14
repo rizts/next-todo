@@ -5,7 +5,12 @@ import Database from "better-sqlite3";
 import path from "path";
 
 // Initialize SQLite database for Better Auth
-const dbPath = process.env.DATABASE_URL?.replace("file:", "") || path.join(process.cwd(), "auth.db");
+// In Vercel (Production), we must use /tmp directory as it's the only writable area.
+const isVercel = process.env.VERCEL === "1";
+const dbPath = isVercel 
+    ? path.join("/tmp", "auth.db")
+    : (process.env.DATABASE_URL?.replace("file:", "") || path.join(process.cwd(), "auth.db"));
+
 const db = new Database(dbPath);
 
 import { sendWelcomeEmail } from "./email";

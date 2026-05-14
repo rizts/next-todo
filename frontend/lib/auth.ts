@@ -15,6 +15,8 @@ let db: any;
 try {
     db = new Database(dbPath);
     console.log("Database initialized successfully at:", dbPath);
+    console.log("Database object type:", typeof db);
+    console.log("Database methods:", Object.keys(db).filter(k => typeof (db as any)[k] === "function"));
     
     db.exec(`
         CREATE TABLE IF NOT EXISTS user (

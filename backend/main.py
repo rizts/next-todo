@@ -5,9 +5,12 @@ from routers import todos
 
 app = FastAPI(title="Todo API", description="API for Full-Stack Todo App")
 
+# Split FRONTEND_URL by comma to support multiple origins (e.g. localhost and Vercel)
+origins = [origin.strip() for origin in settings.FRONTEND_URL.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -65,6 +65,9 @@ I created a manual JWT retrieval step in `api-client.ts` that fetches the token 
 ### 3. Forcing Google OAuth Consent
 To ensure a reliable testing environment, I added the `prompt: "select_account consent"` parameter to the Google provider. This forces the account selection and permission screens on every login, preventing silent login failures during development.
 
+### 4. Docker Networking & Volume Isolation
+I resolved a critical issue where the backend could not reach the frontend's JWKS endpoint within Docker due to `localhost` resolution. I introduced `INTERNAL_AUTH_URL` for container-to-container communication and implemented **anonymous volumes** for `.next` and `node_modules` to prevent permission conflicts (os error 13) between Docker and the host machine.
+
 ---
 
 ## 🏁 Summary

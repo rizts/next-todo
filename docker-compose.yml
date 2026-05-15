@@ -9,6 +9,9 @@ services:
       - ./backend:/app
     environment:
       - DATABASE_URL=sqlite:///./todo.db
+      - FRONTEND_URL=http://localhost:3000
+      - INTERNAL_AUTH_URL=http://frontend:3000
+      - BETTER_AUTH_SECRET=dev_secret_change_in_production_32chars
     restart: always
 
   frontend:
@@ -20,6 +23,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.next
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - BETTER_AUTH_URL=http://localhost:3000

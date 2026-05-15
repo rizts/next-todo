@@ -11,13 +11,20 @@ async def get_jwks():
     if _jwks_cache:
         return _jwks_cache
     
+    # Use INTERNAL_AUTH_URL if provided (e.g. for Docker internal networking)
+    # otherwise fallback to FRONTEND_URL
+    base_url = settings.INTERNAL_AUTH_URL or settings.FRONTEND_URL
+    
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{settings.FRONTEND_URL}/api/auth/jwks")
+            jwks_url = f"{base_url}/api/auth/jwks"
+            print(f"DEBUG: Fetching JWKS from {jwks_url}")
+            response = await client.get(jwks_url)
+            response.raise_for_status()
             _jwks_cache = response.json()
             return _jwks_cache
     except Exception as e:
-        print(f"Failed to fetch JWKS: {e}")
+        print(f"Failed to fetch JWKS from {base_url}: {e}")
         return None
 
 async def get_current_user(request: Request):

@@ -5,9 +5,10 @@ from pydantic import field_validator
 class Settings(BaseSettings):
     BETTER_AUTH_SECRET: str
     FRONTEND_URL: str = "http://localhost:3000"
+    INTERNAL_AUTH_URL: str = ""  # Used for server-to-server auth calls (e.g. Docker internal)
     DATABASE_URL: str = "sqlite:///./todos.db"
 
-    @field_validator("FRONTEND_URL", mode="before")
+    @field_validator("FRONTEND_URL", "INTERNAL_AUTH_URL", mode="before")
     @classmethod
     def strip_trailing_slash(cls, v: str) -> str:
         if isinstance(v, str):

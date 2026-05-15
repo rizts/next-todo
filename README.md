@@ -2,8 +2,8 @@
 
 A modern, high-performance Todo application featuring robust authentication with **Better Auth**, a secure **FastAPI** backend, and a beautiful **Next.js** frontend.
 
-> [!NOTE]
-> Detailed project documentation, including architecture, features, and deep-dive technical guides, can be found in the **[WALKTHROUGH.md](WALKTHROUGH.md)** file.
+> [!IMPORTANT]
+> **Written Walkthrough**: Detailed project documentation, including architecture, features, and deep-dive technical guides, can be found in the **[WALKTHROUGH.md](WALKTHROUGH.md)** file. This serves as the primary deliverable for the assignment explanation.
 
 ## ✨ Features
 
@@ -29,9 +29,20 @@ graph TD
 
 ### Key Technical Decisions
 
-1.  **JWKS (JSON Web Key Set)**: Unlike basic symmetric tokens (HS256), we use asymmetric signing. The frontend serves public keys at `/api/auth/jwks`, which the backend fetches dynamically.
-2.  **Serverless Resilience**: To handle the ephemeral nature of serverless platforms (like Vercel), we utilize **LibSQL (Turso)** for authentication data, ensuring sessions are persistent and globally available.
-3.  **Robust Config**: The backend includes a global configuration validator to automatically sanitize environment variables (like stripping trailing slashes), ensuring stable connections across different cloud platforms.
+#### 1. JWT Integration: JWKS (JSON Web Key Set)
+**The Choice**: I chose to use asymmetric signing (EdDSA) instead of a simple symmetric secret (HS256). The frontend serves the public keys at `/api/auth/jwks`, which the FastAPI backend fetches and caches dynamically.
+
+**Rationale & Tradeoffs**: 
+- **Security**: Asymmetric signing ensures the backend only needs the public key to verify tokens. If the backend is compromised, the attacker cannot forge new tokens.
+- **Decoupling**: The backend doesn't need to share a secret string with the frontend, making it easier to rotate keys without redeploying both services.
+- **Tradeoff**: It adds a slight overhead to the first request (fetching the JWKS), but this is mitigated by caching the keys in the backend.
+
+#### 2. Email Delivery: Brevo API
+**Sender Domain**: `gmail.com` (rizts.tech@gmail.com)
+**Implementation**: I utilized raw Fetch API calls to Brevo's REST endpoint to avoid compatibility issues between the Brevo SDK and Next.js 15 (Turbopack).
+
+#### 3. Persistence: LibSQL (Turso)
+To handle the ephemeral nature of serverless platforms (like Vercel), we utilize **LibSQL (Turso)** for authentication data, ensuring sessions are persistent and globally available.
 
 ## 🛠️ Setup Instructions
 
@@ -69,7 +80,15 @@ GOOGLE_CLIENT_SECRET=your_google_secret
 
 # Email (Brevo)
 BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_NAME="Todo App"
 BREVO_SENDER_EMAIL=your_verified_sender_email
+
+# API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Docker/Internal Networking (Optional)
+# Used by backend to reach frontend internally in Docker
+INTERNAL_AUTH_URL=http://frontend:3000
 ```
 
 Create a `.env` in `backend/`:
